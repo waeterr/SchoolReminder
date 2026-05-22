@@ -1,48 +1,52 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Classroom;
-use Illuminate\Support\Str;
 
 class ClassroomController extends Controller
 {
-    public function create(Request $request)
+    public function store(Request $request)
     {
-        $user = session('user');
+        try {
 
-        if($user->role != 'guru'){
-            return back();
+            $request->validate([
+                'name' => 'required',
+                'subject' => 'required',
+                'description' => 'required',
+            ]);
+
+            // DEBUG USER LOGIN
+            if (!auth()->check()) {
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User belum login'
+                ], 401);
+            }
+
+            $classroom = Classroom::create([
+                'teacher_id' => auth()->user()->id,
+                'name' => $request->name,
+                'subject' => $request->subject,
+                'description' => $request->description,
+                'class_code' => strtoupper(substr(md5(time()),0,6))
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Kelas berhasil dibuat',
+                'data' => $classroom
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        Classroom::create([
-            'teacher_id' => $user->id,
-            'name' => $request->name,
-            'subject' => $request->subject,
-            'description' => $request->description,
-            'photo' => $request->photo,
-            'class_code' => strtoupper(Str::random(6))
-        ]);
-
-        return back();
-    }
-
-    public function join(Request $request)
-    {
-        $classroom = Classroom::where(
-            'class_code',
-            $request->class_code
-        )->first();
-
-        if(!$classroom){
-            return back();
-        }
-
-        $classroom->students()->syncWithoutDetaching([
-            session('user')->id
-        ]);
-
-        return back();
     }
 }

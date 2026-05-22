@@ -10,11 +10,13 @@ use Illuminate\Support\Facades\Auth;
 
 class ClassroomController extends Controller
 {
-    // API untuk mendapatkan daftar kelas yang diikuti oleh user
+    // AMBIL SEMUA KELAS
     public function index()
     {
         $user = Auth::user();
-        if($user->role == 'guru'){
+
+        if ($user->role == 'guru') {
+
             $classrooms = Classroom::with([
                 'teacher',
                 'students',
@@ -25,9 +27,10 @@ class ClassroomController extends Controller
                 'teacher_id',
                 $user->id
             )
-            ->latest()  
+            ->latest()
             ->get();
-        }else{
+
+        } else {
 
             $classrooms = $user
                 ->joinedClassrooms()
@@ -40,38 +43,69 @@ class ClassroomController extends Controller
                 ->latest()
                 ->get();
         }
+
         return response()->json([
             'status' => true,
             'data' => $classrooms
         ]);
     }
 
-    // API untuk bergabung ke kelas menggunakan class_code
+    // BUAT KELAS
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required',
+            'subject' => 'required',
+            'description' => 'required',
+        ]);
+
+        $classroom = Classroom::create([
+            'teacher_id' => Auth::id(),
+            'name' => $request->name,
+            'subject' => $request->subject,
+            'description' => $request->description,
+            'class_code' => strtoupper(Str::random(6))
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Kelas berhasil dibuat',
+            'data' => $classroom
+        ]);
+    }
+
+    // JOIN KELAS
     public function join(Request $request)
     {
         $request->validate([
             'class_code' => 'required|exists:classrooms,class_code'
         ]);
-        // Cari kelas berdasarkan class_code yang diberikan
-        $classroom = Classroom::where('class_code',$request->class_code
+
+        $classroom = Classroom::where(
+            'class_code',
+            $request->class_code
         )->first();
-        if(!$classroom){
-            return response()->json(['status' => false
+
+        if (!$classroom) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Kelas tidak ditemukan'
             ]);
         }
 
-        // Tambahkan siswa ke kelas tanpa menghapus siswa yang sudah ada
         $classroom->students()
             ->syncWithoutDetaching([
                 Auth::id()
             ]);
 
         return response()->json([
-            'status' => true
+            'status' => true,
+            'message' => 'Berhasil join kelas'
         ]);
     }
 
-    // API untuk mendapatkan daftar anggota (guru dan siswa) dari sebuah kelas
+    // MEMBER KELAS
     public function members($id)
     {
         $classroom = Classroom::with([
@@ -79,7 +113,7 @@ class ClassroomController extends Controller
             'students'
         ])->find($id);
 
-        if(!$classroom){
+        if (!$classroom) {
 
             return response()->json([
                 'status' => false,
@@ -88,13 +122,9 @@ class ClassroomController extends Controller
         }
 
         return response()->json([
-
             'status' => true,
-
             'teacher' => $classroom->teacher,
-
             'students' => $classroom->students
-
         ]);
     }
 }

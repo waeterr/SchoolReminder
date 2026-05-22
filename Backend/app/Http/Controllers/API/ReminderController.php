@@ -3,44 +3,74 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\Assignment;
-use App\Models\Submission;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Assignment;
+use Carbon\Carbon;
 
 class ReminderController extends Controller
 {
     public function index()
     {
-        $userId = Auth::id();
-        $assignments = Assignment::with(['classroom'
-        ])->get();
-        $pending = [];
-        
-        // Cek setiap tugas apakah sudah dikumpulkan oleh user
+        $assignments = Assignment::with([
+            'classroom',
+            'submissions'
+        ])
+        ->where('teacher_id', Auth::id())
+        ->latest()
+        ->get();
+
+        $data = [];
+
         foreach($assignments as $assignment){
-            $submitted = Submission::where('assignment_id',
-            $assignment->id
-            )->where('student_id',$userId)->exists();
 
-            if(!$submitted){    // Jika belum dikumpulkan, tambahkan ke daftar pending
-                $pending[] = [
-                    'assignment_id' =>
-                        $assignment->id,
-                    'title' =>
-                        $assignment->title,
-                    'description' =>
-                        $assignment->description,
-                    'deadline' =>
-                        $assignment->deadline,
-                    'classroom' =>
-                        $assignment->classroom->name
-                ];
-            }
+            $totalStudents =
+                $assignment->classroom
+                ->students()
+                ->count();
+
+            $submitted =
+                $assignment->submissions()
+                ->count();
+
+            $deadline =
+                Carbon::parse($assignment->deadline);
+
+            $daysLeft =
+                now()->diffInDays(
+                    $deadline,
+                    false
+                );
+
+            $badge = "H-" . $daysLeft;
+
+            $data[] = [
+
+                'id' =>
+                    $assignment->id,
+
+                'title' =>
+                    $assignment->title,
+
+                'classroom' =>
+                    $assignment->classroom->name,
+
+                'submission' =>
+                    $submitted .
+                    " dari " .
+                    $totalStudents .
+                    " siswa sudah mengumpulkan",
+
+                'deadline' =>
+                    $assignment->deadline,
+
+                'badge' =>
+                    $badge
+            ];
         }
-        return response()->json([   
-            'status' => true,
-            'pending_tasks' => $pending
 
+        return response()->json([
+            'status' => true,
+            'data' => $data
         ]);
     }
 }

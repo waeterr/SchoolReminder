@@ -49,49 +49,37 @@ class AuthController extends Controller
         ]);
     }
 
-    public function login(Request $request) // API Login untuk Android
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|min:6',
-        ]);
+    public function login(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email',      // ganti dari 'name'
+        'password' => 'required|min:6',
+    ]);
 
-        $user = User::where(
-            'email',
-            $request->email
-        )->first();
+    $user = User::where('email', $request->email)->first();  // ganti dari 'name'
 
-        if(!$user){
-
-            return response()->json([
-                'status' => false,
-                'message' => 'User tidak ditemukan'
-            ]);
-        }
-
-        if(!Hash::check(    
-            $request->password,
-            $user->password
-        )){
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Password salah'
-            ]);
-        }
-
-        $token = $user->createToken(
-            'mobile'
-        )->plainTextToken;
-
+    if(!$user){
         return response()->json([
-            'status' => true,
-            'token' => $token,
-            'user' => $user
-
+            'status' => false,
+            'message' => 'User tidak ditemukan'
         ]);
     }
 
+    if(!Hash::check($request->password, $user->password)){
+        return response()->json([
+            'status' => false,
+            'message' => 'Password salah'
+        ]);
+    }
+
+    $token = $user->createToken('mobile')->plainTextToken;
+
+    return response()->json([
+        'status' => true,
+        'token' => $token,
+        'user' => $user
+    ]);
+}
         public function logout(Request $request)    // API Logout untuk Android
     {
         $request->user()
