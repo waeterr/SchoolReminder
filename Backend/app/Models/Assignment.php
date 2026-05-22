@@ -8,6 +8,7 @@ class Assignment extends Model
 {
     protected $fillable = [
         'classroom_id',
+        'teacher_id',
         'title',
         'description',
         'deadline',
@@ -19,6 +20,9 @@ class Assignment extends Model
     {
         return $this->belongsTo(Classroom::class);
     }
-
+public function submissions()
+{
+    return $this->hasMany(Submission::class);
+}
     
 }

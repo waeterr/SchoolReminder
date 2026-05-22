@@ -8,6 +8,7 @@ class Material extends Model
 {
     protected $fillable = [
         'classroom_id',
+        'teacher_id',
         'title',
         'description',
         'file'
