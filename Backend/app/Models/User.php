@@ -68,4 +68,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Classroom::class, 'teacher_id');
     }
+
+    public function joinedClassrooms()
+    {
+        return $this->belongsToMany(Classroom::class, 'classroom_user', 'user_id', 'classroom_id');
+    }
 }

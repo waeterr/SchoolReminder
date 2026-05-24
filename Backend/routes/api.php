@@ -22,7 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/update', [ProfileController::class, 'update']);
 
     Route::post('/create-class', [ClassroomController::class, 'store']);
-    Route::post('/join-class', [ClassroomController::class, 'join']);
+    Route::post('/join', [ClassroomController::class, 'join']);
     Route::get('/classes', [ClassroomController::class, 'index']);
     Route::get('/class-members/{id}', [ClassroomController::class, 'members']);
 
