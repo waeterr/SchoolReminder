@@ -11,55 +11,68 @@ class AssignmentController extends Controller
 {
     // API untuk membuat tugas baru
 
-    public function store(Request $request)
-    {
-        $request->validate([
+   public function store(Request $request)
+{
+    $request->validate([
 
-            'classroom_id' =>
-                'required|exists:classrooms,id',
-            'title' =>
-                'required|string|max:255',
-            'description' =>
-                'required|string|max:3000',
-            'deadline' =>
-                'required|date|after:today',
-            'file' =>
-                'nullable|file|
-                mimes:jpg,jpeg,png,pdf,doc,docx,ppt,pptx,zip|
-                max:20480',
-        ]);
+        'classroom_id' =>
+            'required|exists:classrooms,id',
 
-        // upload file jika ada
+        'title' =>
+            'required|string|max:255',
 
-        $filePath = null;
-        if($request->hasFile('file')){
-            $filePath = $request
-                ->file('file')
-                ->store(
-                    'assignments',
-                    'public'
-                );
-        }
+        'description' =>
+            'required|string|max:3000',
 
-        $assignment = Assignment::create([
-            'classroom_id' =>
-                $request->classroom_id,
-            'teacher_id' =>
-                Auth::id(),
-            'title' =>
-                $request->title,
-            'description' =>
-                $request->description,
-            'deadline' =>
-                $request->deadline,
-            'file' =>
-                $filePath
-        ]);
+        'deadline' =>
+            'required|date',
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Tugas berhasil dibuat',
-            'data' => $assignment
-        ]);
+        'file' =>
+            'nullable|file|
+            mimes:jpg,jpeg,png,pdf,doc,docx,ppt,pptx,zip|
+            max:20480',
+    ]);
+
+    $filePath = null;
+
+    if($request->hasFile('file')){
+
+        $filePath = $request
+            ->file('file')
+            ->store(
+                'assignments',
+                'public'
+            );
     }
-}
+
+    $assignment = Assignment::create([
+
+        'classroom_id' =>
+            $request->classroom_id,
+
+        'teacher_id' =>
+            Auth::id(),
+
+        'title' =>
+            $request->title,
+
+        'description' =>
+            $request->description,
+
+        'deadline' =>
+            $request->deadline,
+
+        'file' =>
+            $filePath
+    ]);
+
+    return response()->json([
+
+        'status' => true,
+
+        'message' =>
+            'Tugas berhasil dibuat',
+
+        'data' => $assignment
+    ]);
+}}
