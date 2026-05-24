@@ -37,5 +37,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/materials/{classroom}', [MaterialController::class, 'index']);
 
     Route::get('/reminders', [ReminderController::class, 'index']);
-    
+    Route::post('/grade-submission', [SubmissionController::class, 'grade'])
+    ->middleware('auth:sanctum');
 });
