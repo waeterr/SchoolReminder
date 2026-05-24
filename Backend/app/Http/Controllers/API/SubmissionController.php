@@ -64,8 +64,9 @@ class SubmissionController extends Controller
                     'id'            => $s->id,
                     'assignment_id' => $s->assignment_id,
                     'student_id'    => $s->student_id,
-                    'file'          => $s->file,
-                    'grade'         => $s->grade,
+                   'file' => $s->file
+    ? asset('storage/' . $s->file)
+    : null,'score' => $s->score,
                     'student'       => $s->student ? [
                         'id'    => $s->student->id,
                         'name'  => $s->student->name,
@@ -81,11 +82,13 @@ class SubmissionController extends Controller
     {
         $request->validate([
             'submission_id' => 'required|exists:submissions,id',
-            'grade'         => 'required|integer|min:0|max:100',
+           'score' => 'required|integer|min:0|max:100',
         ]);
 
         $submission = Submission::find($request->submission_id);
-        $submission->update(['grade' => $request->grade]);
+       $submission->update([
+    'score' => $request->score
+]);
 
         return response()->json([
             'status'  => true,
